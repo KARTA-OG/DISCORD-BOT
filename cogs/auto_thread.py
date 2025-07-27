@@ -31,53 +31,48 @@ class AutoThread(commands.Cog):
         if message.channel.id in self.enabled_channels:
             try:
                 await message.create_thread(name=f"💬 Thread for {message.author.name}")
+                print(f"✅ Created thread in #{message.channel.name} for {message.author}")
             except discord.Forbidden:
-                print(f"❌ Missing permissions to create thread in #{message.channel.name}")
+                print(f"❌ No permission to create thread in #{message.channel.name}")
             except Exception as e:
-                print(f"⚠️ Error creating thread: {e}")
+                print(f"⚠️ Failed to create thread: {e}")
 
     @app_commands.command(name="enableautothread", description="Enable auto-thread creation in this channel")
     async def enable_autothread(self, interaction: discord.Interaction):
-        # Manual permission check
         if not interaction.user.guild_permissions.manage_channels:
             return await interaction.response.send_message(
-                "❌ You need `Manage Channels` permission to use this command.",
-                ephemeral=True
+                "❌ You need `Manage Channels` permission to use this.", ephemeral=True
             )
 
         cid = interaction.channel.id
         if cid in self.enabled_channels:
-            return await interaction.response.send_message(
-                "ℹ️ Auto-thread is already enabled in this channel.",
-                ephemeral=True
-            )
+            return await interaction.response.send_message("ℹ️ Already enabled.", ephemeral=True)
 
         self.enabled_channels.append(cid)
         save_config(self.enabled_channels)
-        await interaction.response.send_message("✅ Auto-thread creation is now enabled in this channel.", ephemeral=True)
+        await interaction.response.send_message("✅ Auto-thread enabled for this channel.", ephemeral=True)
 
-    @app_commands.command(name="disableautothread", description="Disable auto-thread creation in this channel")
+    @app_commands.command(name="disableautothread", description="Disable auto-thread in this channel")
     async def disable_autothread(self, interaction: discord.Interaction):
         if not interaction.user.guild_permissions.manage_channels:
             return await interaction.response.send_message(
-                "❌ You need `Manage Channels` permission to use this command.",
-                ephemeral=True
+                "❌ You need `Manage Channels` permission to use this.", ephemeral=True
             )
 
         cid = interaction.channel.id
         if cid not in self.enabled_channels:
-            return await interaction.response.send_message(
-                "ℹ️ Auto-thread is not enabled in this channel.",
-                ephemeral=True
-            )
+            return await interaction.response.send_message("ℹ️ Auto-thread is not enabled here.", ephemeral=True)
 
         self.enabled_channels.remove(cid)
         save_config(self.enabled_channels)
-        await interaction.response.send_message("✅ Auto-thread creation is now disabled in this channel.", ephemeral=True)
+        await interaction.response.send_message("✅ Auto-thread disabled for this channel.", ephemeral=True)
 
     async def cog_app_command_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
-        await interaction.response.send_message("⚠️ An unexpected error occurred.", ephemeral=True)
-        print(f"Error in AutoThread command: {error}")
+        try:
+            await interaction.response.send_message("⚠️ Something went wrong.", ephemeral=True)
+        except discord.InteractionResponded:
+            await interaction.followup.send("⚠️ Error occurred after response.", ephemeral=True)
+        print(f"[AUTO_THREAD ERROR] {error}")
 
 async def setup(bot):
     await bot.add_cog(AutoThread(bot))
