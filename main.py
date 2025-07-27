@@ -26,7 +26,7 @@ intents = discord.Intents.all()
 bot = commands.Bot(
     command_prefix="!",
     intents=intents,
-    application_id=int(os.environ["APPLICATION_ID"])  # Required for slash command sync
+    application_id=int(os.environ["APPLICATION_ID"])
 )
 
 # ✅ Import persistent views from cogs
@@ -34,16 +34,11 @@ from cogs.vc_logic import handle_vc_update
 from cogs.vc_create import VCButtonView
 from cogs.ticket import TicketButton
 
-# ✅ Setup persistent views + manually load 3 specific cogs
+# ✅ Setup persistent views (required after bot restarts)
 @bot.event
 async def setup_hook():
     bot.add_view(VCButtonView())
     bot.add_view(TicketButton())
-
-    # ✅ Manually load 3 specific cogs
-    await bot.load_extension("cogs.warn")
-    await bot.load_extension("cogs.purge")
-    await bot.load_extension("cogs.auto_thread")
 
 # ✅ On bot ready: Print bot info
 @bot.event
@@ -66,10 +61,10 @@ async def on_ready():
 async def on_voice_state_update(member, before, after):
     await handle_vc_update(member, before, after)
 
-# ✅ Auto-load all other cogs dynamically (except vc_logic)
+# ✅ Load all cogs dynamically except vc_logic.py (which is not a cog)
 async def load_cogs():
     for filename in os.listdir("./cogs"):
-        if filename.endswith(".py") and filename not in ["vc_logic.py", "warn.py", "purge.py", "auto_thread.py"]:
+        if filename.endswith(".py") and filename != "vc_logic.py":
             try:
                 await bot.load_extension(f"cogs.{filename[:-3]}")
                 print(f"✅ Loaded extension: cogs.{filename[:-3]}")
@@ -82,7 +77,7 @@ async def main():
     async with bot:
         await load_cogs()
 
-        # ✅ Sync slash commands (again after loading all cogs)
+        # ✅ Sync slash commands again after all cogs loaded
         try:
             if config.get("test_guild_id"):
                 test_guild = discord.Object(id=int(config["test_guild_id"]))
@@ -94,7 +89,6 @@ async def main():
         except Exception as e:
             print(f"❌ Slash command sync error: {e}")
 
-        # ✅ Fetch bot token from Render environment
         token = os.getenv("DISCORD_BOT_TOKEN") or os.getenv("TOKEN")
         if not token:
             print("❌ Bot token not found. Set DISCORD_BOT_TOKEN or TOKEN in Render environment.")
