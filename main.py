@@ -61,7 +61,16 @@ async def load_cogs():
 # 🚀 Start bot
 async def main():
     async with bot:
-        await load_cogs()
+        await load_cogs()  # ⬅️ Load all cogs first!
+
+        # ✅ Now sync slash commands
+        if config.get("test_guild_id"):
+            test_guild = discord.Object(id=int(config["test_guild_id"]))
+            await bot.tree.sync(guild=test_guild)
+            print(f"🧪 Slash commands synced to test server: {config['test_guild_id']}")
+        else:
+            await bot.tree.sync()
+            print("🌐 Slash commands synced globally")
 
         token = os.getenv("DISCORD_BOT_TOKEN") or os.getenv("TOKEN")
         if not token:
