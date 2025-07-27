@@ -6,7 +6,7 @@ import asyncio
 import keep_alive
 import traceback
 
-# ✅ Start Flask keep-alive (for Render)
+# ✅ Start keep-alive for Render
 keep_alive.keep_alive()
 
 # ✅ Load config
@@ -17,11 +17,11 @@ if os.path.exists(CONFIG_PATH):
 else:
     config = {}
 
-# ✅ Ensure environment var
+# ✅ Check required env var
 if "APPLICATION_ID" not in os.environ:
-    raise ValueError("❌ APPLICATION_ID not set in Render environment.")
+    raise ValueError("❌ APPLICATION_ID is not set in Render!")
 
-# ✅ Bot setup
+# ✅ Setup bot
 intents = discord.Intents.all()
 bot = commands.Bot(
     command_prefix="!",
@@ -29,7 +29,7 @@ bot = commands.Bot(
     application_id=int(os.environ["APPLICATION_ID"])
 )
 
-# ✅ Import views
+# ✅ Import view buttons
 from cogs.vc_logic import handle_vc_update
 from cogs.vc_create import VCButtonView
 from cogs.ticket import TicketButton
@@ -43,12 +43,12 @@ async def setup_hook():
 async def on_ready():
     print(f"✅ Logged in as {bot.user} ({bot.user.id})")
 
-# ✅ Voice channel role handler
+# ✅ VC role handler
 @bot.event
 async def on_voice_state_update(member, before, after):
     await handle_vc_update(member, before, after)
 
-# ✅ Dynamic cog loader
+# ✅ Load all cogs from folder
 async def load_cogs():
     for filename in os.listdir("./cogs"):
         if filename.endswith(".py") and filename != "vc_logic.py":
@@ -59,12 +59,11 @@ async def load_cogs():
                 print(f"❌ Failed to load cogs.{filename}")
                 traceback.print_exc()
 
-# ✅ Main startup
+# ✅ Main function
 async def main():
     async with bot:
         await load_cogs()
 
-        # 🔁 NOW sync slash commands after cogs are loaded
         try:
             if config.get("test_guild_id"):
                 test_guild = discord.Object(id=int(config["test_guild_id"]))
@@ -74,16 +73,18 @@ async def main():
                 commands = await bot.tree.sync()
                 print(f"🌐 Synced {len(commands)} global commands.")
 
+            # 👇 Print all synced command names
             for cmd in commands:
                 print(f"📌 /{cmd.name}")
         except Exception as e:
-            print(f"❌ Slash command sync failed: {e}")
+            print(f"❌ Failed to sync slash commands: {e}")
 
-        # ✅ Start bot
+        # ✅ Token check
         token = os.getenv("DISCORD_BOT_TOKEN") or os.getenv("TOKEN")
         if not token:
-            print("❌ DISCORD_BOT_TOKEN not set in Render!")
+            print("❌ DISCORD_BOT_TOKEN not set in Render.")
             return
+
         print("🚀 Starting bot...")
         await bot.start(token)
 
