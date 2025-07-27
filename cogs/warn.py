@@ -35,13 +35,12 @@ class Warn(commands.Cog):
         save_warn_log_data(self.warn_logs)
 
         await interaction.response.send_message(
-            f"✅ Warn log channel has been set to {channel.mention}.", ephemeral=True
+            f"✅ Warn log channel set to {channel.mention}.", ephemeral=True
         )
 
     @app_commands.command(name="warn", description="Warn a user with a reason")
-    @app_commands.describe(user="The user you want to warn", reason="Reason for warning")
+    @app_commands.describe(user="The user to warn", reason="Reason for the warning")
     async def warn(self, interaction: discord.Interaction, user: discord.Member, reason: str):
-        # DM the warned user
         try:
             embed_dm = discord.Embed(
                 title="⚠️ You Have Been Warned",
@@ -51,12 +50,10 @@ class Warn(commands.Cog):
             embed_dm.set_footer(text=f"Issued by {interaction.user}", icon_url=interaction.user.display_avatar.url)
             await user.send(embed=embed_dm)
         except discord.Forbidden:
-            await interaction.response.send_message("❗ Could not DM the user. They may have DMs disabled.", ephemeral=True)
+            await interaction.response.send_message("❗ Could not DM the user.", ephemeral=True)
 
-        # Send confirmation to moderator
         await interaction.response.send_message(f"✅ {user.mention} has been warned.", ephemeral=True)
 
-        # Log in warn log channel
         channel_id = self.warn_logs.get(str(interaction.guild_id))
         if channel_id:
             channel = interaction.guild.get_channel(channel_id)
@@ -67,13 +64,16 @@ class Warn(commands.Cog):
                     timestamp=interaction.created_at
                 )
                 embed_log.add_field(name="👤 User", value=f"{user} ({user.id})", inline=False)
-                embed_log.add_field(name="🧑‍⚖️ Warned by", value=f"{interaction.user} ({interaction.user.id})", inline=False)
+                embed_log.add_field(name="🧑‍⚖️ Moderator", value=f"{interaction.user} ({interaction.user.id})", inline=False)
                 embed_log.add_field(name="📄 Reason", value=reason, inline=False)
                 await channel.send(embed=embed_log)
 
     async def cog_app_command_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
-        await interaction.response.send_message("⚠️ An error occurred while processing the command.", ephemeral=True)
-        print(f"Error in warn command: {error}")
+        try:
+            await interaction.response.send_message("⚠️ An error occurred while processing the command.", ephemeral=True)
+        except discord.InteractionResponded:
+            await interaction.followup.send("⚠️ Error occurred after response.", ephemeral=True)
+        print(f"[WARN ERROR] {error}")
 
 async def setup(bot):
     await bot.add_cog(Warn(bot))
