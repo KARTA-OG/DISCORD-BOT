@@ -19,7 +19,12 @@ else:
 
 # ✅ Bot setup
 intents = discord.Intents.all()
-bot = commands.Bot(command_prefix="!", intents=intents)
+
+bot = commands.Bot(
+    command_prefix="!",
+    intents=intents,
+    application_id=int(os.environ["APPLICATION_ID"])  # ✅ Add this line
+)
 
 # ✅ Persistent views
 from cogs.vc_logic import handle_vc_update
