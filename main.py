@@ -28,20 +28,24 @@ from cogs.ticket import TicketButton
 
 @bot.event
 async def setup_hook():
-    # ✅ Sync slash commands ONLY to test server if set
-    if config.get("test_guild_id"):
-        test_guild = discord.Object(id=int(config["test_guild_id"]))
-        await bot.tree.sync(guild=test_guild)
-        print(f"🧪 Slash commands synced to test server: {config['test_guild_id']}")
-    else:
-        print("⚠️ No test_guild_id found in config.json — slash commands not synced!")
-
+    # ✅ Only keep persistent views here
     bot.add_view(VCButtonView())
     bot.add_view(TicketButton())
 
 @bot.event
 async def on_ready():
     print(f"✅ Logged in as {bot.user} ({bot.user.id})")
+
+    try:
+        if config.get("test_guild_id"):
+            test_guild = discord.Object(id=int(config["test_guild_id"]))
+            await bot.tree.sync(guild=test_guild)
+            print(f"🧪 Slash commands synced to test server: {config['test_guild_id']}")
+        else:
+            await bot.tree.sync()
+            print("🌐 Slash commands synced globally.")
+    except Exception as e:
+        print(f"❌ Failed to sync slash commands: {e}")
 
 @bot.event
 async def on_voice_state_update(member, before, after):
