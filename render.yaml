@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: versa-bot
+    env: python
+    pythonVersion: 3.11
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    autoDeploy: true
+    envVars:
+      - key: DISCORD_BOT_TOKEN
+        sync: false

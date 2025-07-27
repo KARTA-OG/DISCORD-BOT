@@ -1,0 +1,33 @@
+{
+    "1384861096514687049": {
+        "enabled": true,
+        "whitelist": [
+            "youtube.com",
+            "youtube.be",
+            "youtu.be",
+            "instagram.com"
+        ]
+    },
+    "1397979328138182657": {
+        "enabled": false,
+        "whitelist": [],
+        "roles": [
+            "1398160587896131646",
+            "1397968107091398820"
+        ]
+    },
+    "1384861096514687050": {
+        "enabled": false,
+        "whitelist": [],
+        "roles": [
+            "1398160587896131646"
+        ]
+    },
+    "1398388527695401080": {
+        "enabled": true,
+        "whitelist": [],
+        "roles": [
+            "1398160587896131646"
+        ]
+    }
+}
